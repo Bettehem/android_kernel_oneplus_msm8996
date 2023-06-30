@@ -86,11 +86,14 @@
 #include <net/scm.h>
 #include <net/tcp_states.h>
 
+#include "scm.h"
+
 /* Internal data structures and random procedures: */
 
 static LIST_HEAD(gc_inflight_list);
 static LIST_HEAD(gc_candidates);
-static DEFINE_SPINLOCK(unix_gc_lock);
+DEFINE_SPINLOCK(unix_gc_lock);
+EXPORT_SYMBOL(unix_gc_lock);
 static DECLARE_WAIT_QUEUE_HEAD(unix_gc_wait);
 
 unsigned int unix_tot_inflight;
@@ -122,7 +125,7 @@ struct sock *unix_get_socket(struct file *filp)
  *	descriptor if it is for an AF_UNIX socket.
  */
 
-void unix_inflight(struct file *fp)
+void unix_inflight(struct user_struct *user, struct file *fp)
 {
 	struct sock *s = unix_get_socket(fp);
 
@@ -139,11 +142,11 @@ void unix_inflight(struct file *fp)
 		}
 		unix_tot_inflight++;
 	}
-	fp->f_cred->user->unix_inflight++;
+	user->unix_inflight++;
 	spin_unlock(&unix_gc_lock);
 }
 
-void unix_notinflight(struct file *fp)
+void unix_notinflight(struct user_struct *user, struct file *fp)
 {
 	struct sock *s = unix_get_socket(fp);
 
@@ -158,7 +161,7 @@ void unix_notinflight(struct file *fp)
 			list_del_init(&u->link);
 		unix_tot_inflight--;
 	}
-	fp->f_cred->user->unix_inflight--;
+	user->unix_inflight--;
 	spin_unlock(&unix_gc_lock);
 }
 
