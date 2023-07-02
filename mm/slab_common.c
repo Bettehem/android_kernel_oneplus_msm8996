@@ -44,7 +44,7 @@ struct kmem_cache *kmem_cache;
  * Merge control. If this is set then no merging of slab caches will occur.
  * (Could be removed. This was introduced to pacify the merge skeptics.)
  */
-static int slab_nomerge;
+static int slab_nomerge = 1;
 
 static int __init setup_slab_nomerge(char *str)
 {
@@ -613,7 +613,7 @@ EXPORT_SYMBOL(kmalloc_dma_caches);
  * of two cache sizes there. The size of larger slabs can be determined using
  * fls.
  */
-static s8 size_index[24] = {
+static s8 size_index[24] __ro_after_init = {
 	3,	/* 8 */
 	4,	/* 16 */
 	5,	/* 24 */
